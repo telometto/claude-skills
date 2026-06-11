@@ -97,7 +97,12 @@ def smoke_one(rel_path):
 def main(argv=None):
     parser = argparse.ArgumentParser(
         description="Run `python3 <file> --help` on every .py in the "
-                    "canonical tree and assert exit 0 (gate G8).")
+                    "canonical tree and assert exit 0 (gate G8).",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="Exit codes:\n"
+               "  0  all scripts passed --help, no stale exceptions\n"
+               "  1  one or more scripts failed the --help smoke test\n"
+               "  3  smoke_exceptions.txt lists files that no longer exist")
     parser.add_argument("--json", action="store_true",
                         help="emit a JSON report instead of human-readable output")
     parser.add_argument("--jobs", type=int, default=os.cpu_count() or 4,
@@ -146,11 +151,18 @@ def main(argv=None):
                 print(f"  {f['file']}")
                 print(f"      {f['detail']}")
         if stale_exceptions:
-            print("\nWARNING: exceptions listing files that no longer exist:")
+            print("\nERROR: exceptions listing files that no longer exist")
+            print("(remove them from scripts/smoke_exceptions.txt):")
             for f in stale_exceptions:
                 print(f"  {f}")
 
-    return 1 if failures else 0
+    if failures:
+        return 1
+    # Only reached when no --help failures; a real failure (exit 1) takes
+    # precedence over allowlist hygiene (exit 3).
+    if stale_exceptions:
+        return 3
+    return 0
 
 
 if __name__ == "__main__":

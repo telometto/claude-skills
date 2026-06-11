@@ -31,3 +31,8 @@ engineering/write-a-skill/commands/cs-write-a-skill.md :: references/category/su
 # Example names of skills the extract workflow would GENERATE in the user's tree.
 engineering-team/self-improving-agent/skills/extract/SKILL.md :: docker-m1-fixes/SKILL.md
 engineering-team/self-improving-agent/skills/extract/SKILL.md :: api-client-regen/SKILL.md
+
+# Path-traversal attack payload in a pen-testing teaching table, not a real
+# file reference. Would point outside the repo root if resolved literally;
+# allowlisted as a teaching example, not an actual file.
+engineering-team/skills/security-pen-testing/SKILL.md :: ../../../etc/passwd
