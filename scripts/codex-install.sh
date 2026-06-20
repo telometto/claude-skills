@@ -82,12 +82,13 @@ list_skills() {
 
   if [[ -f $CODEX_INDEX ]] && command -v python3 &> /dev/null; then
     # Use Python to parse JSON and display nicely
-    python3 << 'EOF'
+    CODEX_INDEX="$CODEX_INDEX" python3 << 'EOF'
 import json
+import os
 import sys
 
 try:
-    with open('$CODEX_INDEX'.replace('$CODEX_INDEX', '''$CODEX_INDEX'''), 'r') as f:
+    with open(os.environ["CODEX_INDEX"], "r", encoding="utf-8") as f:
         index = json.load(f)
 
     print("Categories:")
@@ -126,6 +127,12 @@ EOF
 install_skill() {
   local skill_name="$1"
   local dry_run="$2"
+
+  if [[ -z $skill_name || $skill_name == */* || $skill_name == *..* ]]; then
+    print_error "Invalid skill name: $skill_name"
+    return 1
+  fi
+
   local skill_src="$CODEX_SKILLS_SRC/$skill_name"
   local skill_dest="$CODEX_SKILLS_DIR/$skill_name"
 
@@ -171,6 +178,11 @@ install_category() {
 
   if [[ ! -f $CODEX_INDEX ]]; then
     print_error "skills-index.json required for category installation"
+    exit 1
+  fi
+
+  if ! command -v python3 &> /dev/null; then
+    print_error "python3 is required for category installation"
     exit 1
   fi
 
@@ -290,11 +302,19 @@ main() {
         shift
         ;;
       --category)
+        if [[ $# -lt 2 || -z ${2:-} || ${2:-} == --* ]]; then
+          print_error "Category name required"
+          exit 1
+        fi
         mode="category"
         target="$2"
         shift 2
         ;;
       --skill)
+        if [[ $# -lt 2 || -z ${2:-} || ${2:-} == --* ]]; then
+          print_error "Skill name required"
+          exit 1
+        fi
         mode="skill"
         target="$2"
         shift 2
